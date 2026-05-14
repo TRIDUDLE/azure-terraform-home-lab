@@ -12,6 +12,24 @@ resource "azurerm_resource_group" "example" {
   name     = random_pet.rg_name.id
 }
 
+#create virtual network and subnet for the storage account
+resource "azurerm_virtual_network" "vnet" {
+  name                = "vnet-${random_pet.rg_name.id}"
+  address_space       = ["10.0.0.0/16"]
+  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.example.name
+}
+
+# Create a subnet for the storage account
+resource "azurerm_subnet" "subnet" {
+  name                 = "subnet-${random_pet.rg_name.id}"
+  resource_group_name  = azurerm_resource_group.example.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.0.12.0/24"]
+  service_endpoints    = ["Microsoft.Storage"]
+}
+
+
 # Create an Azure Storage account within the resource group
 resource "azurerm_storage_account" "website" {
   name                     = "st${random_pet.rg_name.id}"
@@ -25,6 +43,21 @@ resource "azurerm_storage_account" "website" {
     project     = "terraform-learning"
   }
 }
+
+# Create a comprehensive network rule set for the storage account
+resource "azurerm_storage_account_network_rules" "security_rules" {
+  storage_account_id = azurerm_storage_account.website.id
+
+  # Default action is to deny all traffic
+  default_action = "Deny"
+
+  # Whitelist specific IP addresses and subnets
+  ip_rules                   = [var.my_ip_address]
+  virtual_network_subnet_ids = [azurerm_subnet.subnet.id]
+  bypass                     = ["Metrics"]
+}
+
+
 
 #Create a static website configuration for the storage account
 resource "azurerm_storage_account_static_website" "website_config" {
