@@ -1,5 +1,7 @@
 # Azure Test Simple Static Website with Terraform
 
+Currently only works from specific ip address!
+
 This project automates the deployment of a very simple, static HTML website on Azure Storage using Terraform.
 
 ## Features
