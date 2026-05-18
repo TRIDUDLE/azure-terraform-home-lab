@@ -12,3 +12,8 @@ variable "my_ip_address" {
   type        = string
   description = "My public IP address to allow access to the storage account"
 }
+
+variable "ssh_public_key_path" {
+  type        = string
+  description = "Path to the SSH public key file used for VM authentication"
+}

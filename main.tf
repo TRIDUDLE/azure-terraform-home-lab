@@ -20,13 +20,70 @@ resource "azurerm_virtual_network" "vnet" {
   resource_group_name = azurerm_resource_group.example.name
 }
 
-# Create a subnet for the storage account
-resource "azurerm_subnet" "subnet" {
-  name                 = "subnet-${random_pet.rg_name.id}"
+# Create a subnet for the virtual machine1
+resource "azurerm_subnet" "vm1_subnet" {
+  name                 = "subnet-allowed-${random_pet.rg_name.id}"
   resource_group_name  = azurerm_resource_group.example.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.12.0/24"]
   service_endpoints    = ["Microsoft.Storage"]
+}
+# Create a subnet for the virtual machine2
+resource "azurerm_subnet" "vm2_subnet" {
+  name                 = "subnet-denied-${random_pet.rg_name.id}"
+  resource_group_name  = azurerm_resource_group.example.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.0.24.0/24"]
+}
+
+
+# create two virtual machines, one in each subnet. The VM in the first subnet (vm1_subnet) will be able to access the storage account, while the VM in the second subnet (vm2_subnet) will be denied access due to the network rules we will set up later.
+
+# create public ip for the first VM
+# allowed VM
+resource "azurerm_public_ip" "public_ip_allowed" {
+  name                = "pip-allowed-${random_pet.rg_name.id}"
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+  allocation_method   = "Static"
+
+}
+# Create a network interface for the virtual machine and associate it with the subnet and public IP
+# allowed VM
+resource "azurerm_network_interface" "network_interface_allowed" {
+  name                = "nic-allowed-${random_pet.rg_name.id}"
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.vm1_subnet.id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.public_ip_allowed.id
+  }
+}
+
+#create public ip for the second VM
+# denied VM
+resource "azurerm_public_ip" "public_ip_denied" {
+  name                = "pip-denied-${random_pet.rg_name.id}"
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+  allocation_method   = "Static"
+}
+# Create a network interface for the virtual machine and associate it with the subnet and public IP
+# denied VM
+resource "azurerm_network_interface" "network_interface_denied" {
+  name                = "nic-denied-${random_pet.rg_name.id}"
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.vm2_subnet.id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.public_ip_denied.id
+  }
 }
 
 
@@ -44,7 +101,10 @@ resource "azurerm_storage_account" "website" {
   }
 }
 
-# Create a comprehensive network rule set for the storage account
+# create network rules for the storage account 
+# By default, the storage account will deny all traffic. 
+# We will allow traffic from first subnet (vm1_subnet - 10.0.24.0) and from my current IP address 
+#(var.my_ip_address) to access the storage account.
 resource "azurerm_storage_account_network_rules" "security_rules" {
   storage_account_id = azurerm_storage_account.website.id
 
@@ -53,7 +113,7 @@ resource "azurerm_storage_account_network_rules" "security_rules" {
 
   # Whitelist specific IP addresses and subnets
   ip_rules                   = [var.my_ip_address]
-  virtual_network_subnet_ids = [azurerm_subnet.subnet.id]
+  virtual_network_subnet_ids = [azurerm_subnet.vm1_subnet.id]
   bypass                     = ["Metrics"]
 }
 
