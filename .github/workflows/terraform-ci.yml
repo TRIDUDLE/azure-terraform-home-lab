@@ -53,12 +53,12 @@ jobs:
           api-key: ${{ secrets.INFRACOST_API_KEY }}
       
       - name: generate Infracost Estimate JSON
-        run: infracost breakdown --path . --format json --out-file tmp/infracost.json
+        run: infracost breakdown --path . --format json --out-file /tmp/infracost.json
 
       - name: Comment Infracost Estimate on Pull Request
         if: github.event_name == 'pull_request'
         uses: infracost/actions/comment@v1
         with:
-          path: tmp/infracost.json
+          path: /tmp/infracost.json
           behavior: update
           github-token: ${{ secrets.GITHUB_TOKEN }}
