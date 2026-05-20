@@ -35,8 +35,9 @@ resource "azurerm_linux_virtual_machine" "machina2" {
   resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
 
-  //fixed after testing pipeline
-  size           = "Standard_DS1_v2"
+  //infracost test - change VM size to see cost estimation in action
+  # size                = "Standard_DS1_v2"
+  size           = "Standard_D4s_v3"
   admin_username = "tridudle"
 
   network_interface_ids = [
