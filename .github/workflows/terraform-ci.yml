@@ -1,0 +1,41 @@
+# This GitHub Actions workflow is designed to automate the validation of Terraform code in a repository.
+
+# Name of the workflow displayed in the GitHub Actions tab
+name: "Terraform CI"
+
+# Define the triggers for the workflow
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  terraform-verification:
+    name: "Validate Terraform Code"
+    # Choose the operating system for the GitHub runner
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Clone the repository code onto the GitHub runner
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      # Step 2: Install Terraform CLI on the GitHub runner
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0" 
+
+      # Step 3: Check if the code is properly formatted (terraform fmt)
+      - name: Check Terraform Formatting
+        run: terraform fmt -check
+
+      # Step 4: Initialize the working directory (terraform init)
+      - name: Initialize Terraform
+        run: terraform init 
+      
+      # Step 5: Validate the configuration code (terraform validate)
+      - name: Validate Terraform Configuration
+        run: terraform validate
+   

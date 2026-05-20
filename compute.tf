@@ -34,8 +34,10 @@ resource "azurerm_linux_virtual_machine" "machina2" {
   name                = "machina2-${random_pet.rg_name.id}"
   resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
-  size                = "Standard_DS1_v2"
-  admin_username      = "tridudle"
+
+  //fixed after testing pipeline
+  size           = "Standard_DS1_v2"
+  admin_username = "tridudle"
 
   network_interface_ids = [
     azurerm_network_interface.network_interface_denied.id
