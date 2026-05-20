@@ -36,8 +36,8 @@ resource "azurerm_linux_virtual_machine" "machina2" {
   location            = azurerm_resource_group.example.location
 
   //fixed after testing pipeline
-  size                = "Standard_DS1_v2"
-  admin_username      = "tridudle"
+  size           = "Standard_DS1_v2"
+  admin_username = "tridudle"
 
   network_interface_ids = [
     azurerm_network_interface.network_interface_denied.id
